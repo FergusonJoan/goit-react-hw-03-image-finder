@@ -26,7 +26,7 @@ export class App extends Component {
     const { page, search } = this.state;
 
     if (prevState.search !== search || prevState.page !== page) {
-      this.handleAPI(page);
+      this.handleAPI();
     }
   }
 
@@ -40,9 +40,7 @@ export class App extends Component {
 
     this.setState({
       search: state,
-      status: 'pending',
       gallery: [],
-      loader: true,
       page: 1,
       showBtn: false,
     });
@@ -65,11 +63,12 @@ export class App extends Component {
     });
   };
 
-  handleAPI = page => {
-    this.setState({ loader: true });
+  handleAPI = () => {
+    const { search, page } = this.state;
+    this.setState({ loader: true, status: 'pending ' });
 
     galleryApi
-      .fetchGallery(page, this.state.search)
+      .fetchGallery(page, search)
       .then(data => {
         if (data.total === 0) {
           return this.setState({
@@ -81,7 +80,7 @@ export class App extends Component {
           return {
             gallery: [...prevState.gallery, ...data.hits],
             status: 'resolved',
-            showBtn: this.state.page < Math.ceil(data.total / 12),
+            showBtn: page < Math.ceil(data.total / 12),
           };
         });
       })
@@ -95,21 +94,20 @@ export class App extends Component {
   };
 
   render() {
+    const { status, message, gallery, loader, showBtn, selected } = this.state;
     return (
       <>
         <Searchbar onSubmit={this.onSubmitForm} />
 
-        {this.state.status === 'pending' && <Loader />}
+        {status === 'pending' && <Loader />}
 
-        {this.state.status === 'rejected' && (
-          <ErrorMessage message={this.state.message} />
-        )}
+        {status === 'rejected' && <ErrorMessage message={message} />}
 
-        {this.state.status === 'resolved' && (
+        {status === 'resolved' && (
           <>
             <ImageGallery onSelected={this.onSelected}>
-              {this.state.gallery !== null &&
-                this.state.gallery.map(({ id, largeImageURL, tags }) => (
+              {gallery !== null &&
+                gallery.map(({ id, largeImageURL, tags }) => (
                   <ImageGalleryItem
                     key={id}
                     url={largeImageURL}
@@ -119,24 +117,13 @@ export class App extends Component {
                 ))}
             </ImageGallery>
 
-            {!this.state.loader ? (
-              <>
-                {this.state.showBtn && (
-                  <Button
-                    gallery={this.state.gallery}
-                    onClick={this.handleLoadMore}
-                  />
-                )}
-              </>
-            ) : (
-              <Loader />
+            {status === 'resolved' && showBtn && (
+              <Button gallery={gallery} onClick={this.handleLoadMore} />
             )}
           </>
         )}
 
-        {this.state.selected && (
-          <Modal img={this.state.selected} closeModal={this.closeModal} />
-        )}
+        {selected && <Modal img={selected} closeModal={this.closeModal} />}
       </>
     );
   }
