@@ -1,7 +1,6 @@
-import React, { Component } from 'react';
+import {useState} from 'react';
 
 import galleryApi from '../services/gallery-api';
-
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Modal from './Modal/Modal';
@@ -10,35 +9,32 @@ import Loader from './Loader/Loader';
 import Button from './Button/Button';
 import ErrorMessage from './ErrorMessage/ErrorMessage';
 
-export class App extends Component {
-  state = {
-    search: '',
-    message: '',
-    status: 'idle',
-    gallery: [],
-    selected: null,
-    page: 1,
-    loader: false,
-    showBtn: false,
-  };
+export const App = () => {
+  const [search, setSearch] = useState('');
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState('idle');
+  const [gallery, setGallery] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [page, setPage] = useState(1);
+  const [loader, setLoader] = useState(false);
+  const [showBtn, setShowBtn] = useState(false);
+
 
   componentDidUpdate(prevProps, prevState) {
-    const { page, search } = this.state;
-
+  const  {page, search}  = state;
     if (prevState.search !== search || prevState.page !== page) {
       this.handleAPI();
     }
   }
 
-  onSubmitForm = state => {
+  const onSubmitForm = state => {
     if (!state) {
-      return this.setState({
+      return setState({
         status: 'rejected',
         message: 'string must not be empty',
       });
     }
-
-    this.setState({
+    setState({
       search: state,
       gallery: [],
       page: 1,
@@ -46,24 +42,24 @@ export class App extends Component {
     });
   };
 
-  onSelected = e => {
+  const onSelected = e => {
     if (e.target.src === undefined) {
       return;
     }
-    this.setState({ selected: { url: e.target.src, alt: e.target.alt } });
+    setState({ selected: { url: e.target.src, alt: e.target.alt } });
   };
 
-  closeModal = () => {
-    this.setState({ selected: null });
+  const closeModal = () => {
+    setState({ selected: null });
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => {
+  const handleLoadMore = () => {
+    setPage(prevState => {
       return { page: prevState.page + 1 };
     });
   };
 
-  handleAPI = () => {
+  const handleAPI = () => {
     const { search, page } = this.state;
     this.setState({ loader: true, status: 'pending ' });
 
